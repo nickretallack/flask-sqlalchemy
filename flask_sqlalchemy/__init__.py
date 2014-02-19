@@ -451,7 +451,8 @@ class _QueryProperty(object):
         try:
             mapper = orm.class_mapper(type)
             if mapper:
-                return type.query_class(mapper, session=self.sa.session())
+                session =  self.sa.session() if callable(self.sa.session) else self.sa.session
+                return type.query_class(mapper, session=session)
         except UnmappedClassError:
             return None
 
@@ -749,7 +750,7 @@ class SQLAlchemy(object):
             if app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN']:
                 if response_or_exc is None:
                     self.session.commit()
-            self.session.remove()
+            self.session.remove() if hasattr(self.session, 'remove') else self.session.close()
             return response_or_exc
 
     def apply_pool_defaults(self, app, options):
